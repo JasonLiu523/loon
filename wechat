@@ -1,7 +1,7 @@
 #!name = WeChat增强
 #!desc = DNS分流，内置WeChat分流，广告过滤
 #!openUrl = https://apps.apple.com/app/id414478124
-#!author = ld2j[https://github.com/JasonLiu523]
+#!author = Jason[https://github.com/JasonLiu523]
 #!icon = https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/Weixin.png
 
 [host]
