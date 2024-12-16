@@ -1,0 +1,233 @@
+{
+  "id": "Blued-Eric.app.sub",
+  "name": "Blued-Eric",
+  "author": "@Eric",
+  "icon": "https://raw.githubusercontent.com/Alex0510/Eric/master/Icons/MR-X.png",
+  "repo": "https://t.me/+2T-oJk2FFts4NDZl",
+  "apps": [
+    {
+      "id": "ericPassword",
+      "name": "Eric-密码验证",
+      "descs_html": ["<a target='_blank' href='https://t.me/+2T-oJk2FFts4NDZl'>密码获取链接</a>"],
+      "keys": ["EricPassword"],
+      "settings": [
+        {
+          "id": "EricPassword",
+          "name": "脚本密码",
+          "val": "",
+          "type": "text",
+          "desc": "请输入脚本密码"
+        }
+      ],
+      "author": "@Eric",
+      "script": "https://gist.githubusercontent.com/Alex0510/23b38f5ad332e30d11a60a28ee4aa132/raw/bluedlocation.js,https://gist.githubusercontent.com/Alex0510/23b38f5ad332e30d11a60a28ee4aa132/raw/bluedvip.js,https://gist.githubusercontent.com/Alex0510/23b38f5ad332e30d11a60a28ee4aa132/raw/bluedpic.js,https://gist.githubusercontent.com/Alex0510/85c95aeaf2283ab825702d27ed229a54/raw/Finka.js",
+      "repo": "https://t.me/Mr_Alex",
+      "icons": [
+        "https://raw.githubusercontent.com/Alex0510/Eric/master/Icons/Blued.png",
+        "https://raw.githubusercontent.com/Alex0510/Eric/master/Icons/Blued.png"
+      ]
+    },
+    {
+      "id": "bluedpic",
+      "name": "Eric-pic闪照捕获",
+      "descs_html": [
+        "<p style='line-height: 24px;padding-top:20px;'>1.脚本选择启用或禁用后点击保存后生效.</p>"
+      ],
+      "keys": ["scriptpic"],
+      "settings": [
+        {
+          "id": "scriptpic",
+          "name": "脚本启用开关",
+          "val": "enabled",
+          "type": "selects",
+          "items": [
+            {
+              "key": "true",
+              "label": "启用"
+            },
+            {
+              "key": "false",
+              "label": "禁用"
+            }
+          ],
+          "desc": "选择启用或禁用脚本"
+        }
+      ],
+      "author": "@Eric",
+      "script": "https://gist.githubusercontent.com/Alex0510/23b38f5ad332e30d11a60a28ee4aa132/raw/bluedpic.js",
+      "repo": "https://t.me/Mr_Alex",
+      "icons": [
+        "https://raw.githubusercontent.com/Alex0510/Eric/master/Icons/MR-X.png",
+        "https://raw.githubusercontent.com/Alex0510/Eric/master/Icons/MR-X.png"
+      ]
+    },
+    {
+      "id": "bluedvip",
+      "name": "Eric-vip增强功能",
+      "descs_html": [
+        "<p style='line-height: 24px;padding-top:20px;'>1.脚本选择启用或禁用后点击保存后生效.</p>",
+        "<a target='_blank' href='https://ping.huatuo.qq.com/index.php?btype=logic&rmdip=argo.blued.cn'>ip检测查询1</a>",
+        "<a target='_blank' href='https://ping.huatuo.qq.com/index.php?btype=logic&rmdip=social.blued.cn'>ip检测查询2</a>"
+      ],
+      "keys": ["scriptvip"],
+      "settings": [
+        {
+          "id": "scriptvip",
+          "name": "脚本启用开关",
+          "val": "enabled",
+          "type": "selects",
+          "items": [
+            {
+              "key": "true",
+              "label": "启用"
+            },
+            {
+              "key": "false",
+              "label": "禁用"
+            }
+          ],
+          "desc": "选择启用或禁用脚本"
+        }
+      ],
+      "author": "@Eric",
+      "script": "https://gist.githubusercontent.com/Alex0510/23b38f5ad332e30d11a60a28ee4aa132/raw/bluedvip.js",
+      "repo": "https://t.me/Mr_Alex",
+      "icons": [
+        "https://raw.githubusercontent.com/Alex0510/Eric/master/Icons/MR-X.png",
+        "https://raw.githubusercontent.com/Alex0510/Eric/master/Icons/MR-X.png"
+      ]
+    },
+    {
+      "id": "ipReplacementCity",
+      "name": "Eric- 城市定位(二选一)",
+      "descs_html": [
+        "<p style='line-height: 24px;padding-top:20px;'>1.脚本选择启用或禁用后点击保存后生效.</p>",
+        "<p style='line-height: 24px;padding-top:20px;'>2.采用百度地图API进行查询，由于key每日有使用限额，额度使用完无法使用自定义城市定位，🉑自行申请百度地图API进行填写.<p>",
+        "<a target='_blank' href='https://lbsyun.baidu.com/index.php?title=jspopularGL/guide/getkey'>百度地图API申请教程</a>"
+      ],
+      "keys": ["customCity", "sortBy", "AK", "scriptEnabled"],
+      "settings": [
+        {
+          "id": "customCity",
+          "name": "自定义城市",
+          "val": "",
+          "type": "text",
+          "desc": "请输入要替换的城市"
+        },
+        {
+          "id": "AK",
+          "name": "百度地图API",
+          "val": "",
+          "type": "text",
+          "desc": "请输入百度地图API"
+        },
+        {
+          "id": "sortBy",
+          "name": "地图找人",
+          "val": "",
+          "type": "selects",
+          "items": [
+            {
+              "key": "nearby",
+              "label": "附近的人"
+            },
+            {
+              "key": "online",
+              "label": "在线的人"
+            }
+          ],
+          "desc": "填写(nearby 或 online)此参数仅适用于地图找人，不使用地图找人无需设置保留空即可"
+        },
+        {
+          "id": "scriptEnabled",
+          "name": "脚本启用开关",
+          "val": "enabled",
+          "type": "selects",
+          "items": [
+            {
+              "key": "true",
+              "label": "启用"
+            },
+            {
+              "key": "false",
+              "label": "禁用"
+            }
+          ],
+          "desc": "选择启用或禁用脚本"
+        }
+      ],
+      "author": "@Eric",
+      "script": "https://gist.githubusercontent.com/Alex0510/23b38f5ad332e30d11a60a28ee4aa132/raw/bluedlocation.js,https://gist.githubusercontent.com/Alex0510/85c95aeaf2283ab825702d27ed229a54/raw/Finka.js,https://gist.githubusercontent.com/Alex0510/f4cb2f311b499428db8cf29f88fdae74/raw/Blued_vip.js",
+      "repo": "https://t.me/Mr_Alex",
+      "icons": [
+        "https://support.apple.com/library/content/dam/edam/applecare/images/en_US/iOS/ios15-location-arrow-status-icon.png",
+        "https://support.apple.com/library/content/dam/edam/applecare/images/en_US/iOS/ios15-location-arrow-status-icon.png"
+      ]
+    },
+    {
+      "id": "ipReplacementCoordinates",
+      "name": "Eric- 经纬度精确定位(二选一)",
+      "descs_html": [
+        "<p style='line-height: 24px;padding-top:20px;'>1.脚本选择启用或禁用后点击保存后生效.</p>"
+      ],
+      "keys": ["customLatitude", "customLongitude", "sortBy", "scriptEnabled"],
+      "settings": [
+        {
+          "id": "customLatitude",
+          "name": "自定义纬度",
+          "val": "",
+          "type": "text",
+          "desc": "设置自定义纬度值"
+        },
+        {
+          "id": "customLongitude",
+          "name": "自定义经度",
+          "val": "",
+          "type": "text",
+          "desc": "设置自定义经度值"
+        },
+        {
+          "id": "sortBy",
+          "name": "Map",
+          "val": "",
+          "type": "selects",
+          "items": [
+            {
+              "key": "nearby",
+              "label": "附近的人"
+            },
+            {
+              "key": "online",
+              "label": "在线的人"
+            }
+          ],
+          "desc": "填写(nearby 或 online)此参数仅适用于地图找人，不使用地图找人无需设置保留空即可"
+        },
+        {
+          "id": "scriptEnabled",
+          "name": "脚本启用开关",
+          "val": "enabled",
+          "type": "selects",
+          "items": [
+            {
+              "key": "true",
+              "label": "启用"
+            },
+            {
+              "key": "false",
+              "label": "禁用"
+            }
+          ],
+          "desc": "选择启用或禁用脚本"
+        }
+      ],
+      "author": "@Eric",
+      "script": "https://gist.githubusercontent.com/Alex0510/23b38f5ad332e30d11a60a28ee4aa132/raw/bluedlocation.js,https://gist.githubusercontent.com/Alex0510/85c95aeaf2283ab825702d27ed229a54/raw/Finka.js,https://gist.githubusercontent.com/Alex0510/f4cb2f311b499428db8cf29f88fdae74/raw/Blued_vip.js",
+      "repo": "https://t.me/Mr_Alex",
+      "icons": [
+        "https://support.apple.com/library/content/dam/edam/applecare/images/en_US/iOS/ios15-location-arrow-status-icon.png",
+        "https://support.apple.com/library/content/dam/edam/applecare/images/en_US/iOS/ios15-location-arrow-status-icon.png"
+      ]
+    }
+  ]
+}
