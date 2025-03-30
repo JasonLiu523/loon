@@ -1,201 +1,444 @@
 /*
-作者: @mcdasheng
-脚本功能: Spotify 注册查询
-[Script]
-  generic script-path=https://raw.githubusercontent.com/MCdasheng/Loon/main/Streaming/Spotify.js, timeout=10, tag=Spotify, img-url=https://raw.githubusercontent.com/MCdasheng/QuantumultX/main/Icons/Spotify.png
-@thanks
-  https://github.com/lmc999/RegionRestrictionCheck/blob/main/check.sh
-*/
+ * 感谢并修改自
+ * https://raw.githubusercontent.com/KOP-XIAO/QuantumultX/master/Scripts/streaming-ui-check.js
+ * 节点检测工具
+ * 脚本功能：检查节点是否支持以下流媒体服务：NetFlix、Disney、YouTuBe、Dazn、Param
+ * For Loon 373+ Only, 小于373版本会有bug
+ * 更新于：2023-04-04
+ * 原作者：XIAO_KOP
+ * 现作者：Loon0x00
+ */
 
-const $ = new Env("Spotify");
-const arrow = " ➟ ";
-let lastPrice = null;
+const NF_BASE_URL = "https://www.netflix.com/title/81215567";
+const DISNEY_BASE_URL = 'https://www.disneyplus.com';
+const DISNEY_LOCATION_BASE_URL = 'https://disney.api.edge.bamgrid.com/graph/v1/device/graphql';
+const YTB_BASE_URL = "https://www.youtube.com/premium";
+const Dazn_BASE_URL = "https://startup.core.indazn.com/misl/v5/Startup";
+const Param_BASE_URL = "https://www.paramountplus.com/"
 
-$.token = $.getdata("ipinfo_token") ? $.getdata("ipinfo_token") : "";
+const Discovery_token_BASE_URL = "https://us1-prod-direct.discoveryplus.com/token?deviceId=d1a4a5d25212400d1e6985984604d740&realm=go&shortlived=true"
+const Discovery_BASE_URL = "https://us1-prod-direct.discoveryplus.com/users/me"
 
-(async () => {
-  await Spotify_Test();
-  await Spotify_Price();
-})()
-  .catch((e) => $.logErr(e))
-  .finally(async () => {
-    var res = "------------------------------";
-    res =
-      res +
-      "</br><b>" +
-      "<font  color=>" +
-      "🔐Register" +
-      "</font> : " +
-      "</b>" +
-      "<font  color=>" +
-      spotify +
-      "</font></br>";
-    res =
-      res +
-      "</br><b>" +
-      "<font  color=>" +
-      "💰Price" +
-      "</font> : " +
-      "</b>" +
-      "<font  color=>" +
-      lastPrice +
-      "</font></br>";
-    res =
-      res +
-      "------------------------------" +
-      `</br><font color=#6959CD><b>节点</b> ➟ ${$environment.params.node} </font>`;
-    res =
-      `<p style="text-align: center; font-family: -apple-system; font-size: large; font-weight: thin">` +
-      res +
-      `</p>`;
-    message = res;
-    $done({
-      title: "      🎵Spotify 查询结果",
-      htmlMessage: message,
-    });
-  });
+const GPT_BASE_URL = 'https://chat.openai.com/'
+const GPT_RegionL_URL = 'https://chat.openai.com/cdn-cgi/trace'
 
-async function Spotify_Test() {
-  var options = {
-    url: `https://spclient.wg.spotify.com/signup/public/v1/account`,
-    headers: {
-      "Content-Type": "application/json",
-      "Accept-Language": "en",
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    },
-    node: $environment.params.node,
-    body: "birth_day=11&birth_month=11&birth_year=2000&collect_personal_info=undefined&creation_flow=&creation_point=https%3A%2F%2Fwww.spotify.com%2Fhk-en%2F&displayname=Gay%20Lord&gender=male&iagree=1&key=a1e486e2729f46d6bb368d6b2bcda326&platform=www&referrer=&send-email=0&thirdpartyemail=0&identifier_token=AgE6YTvEzkReHNfJpO114514",
-    timeout: 10000,
-  };
+var inputParams = $environment.params;
+var nodeName = inputParams.node;
 
-  return $.http.post(options).then((resp) => {
-    $.log(resp.body);
-    var obj = JSON.parse(resp.body);
-    if (obj.status == "320" || obj.status == "120") {
-      spotify = "🔴No";
-    } else if (obj.status == "311") {
-      spotify_country = obj.country;
-      spotify = "🎉Yes" + arrow + getCountryFlagEmoji(obj.country) + spotify_country;
-    }
-    $.log("🎵Spotify: " + spotify);
-  });
+let flags = new Map([[ "AC" , "🇦🇨" ] ,["AE","🇦🇪"], [ "AF" , "🇦🇫" ] , [ "AI" , "🇦🇮" ] , [ "AL" , "🇦🇱" ] , [ "AM" , "🇦🇲" ] , [ "AQ" , "🇦🇶" ] , [ "AR" , "🇦🇷" ] , [ "AS" , "🇦🇸" ] , [ "AT" , "🇦🇹" ] , [ "AU" , "🇦🇺" ] , [ "AW" , "🇦🇼" ] , [ "AX" , "🇦🇽" ] , [ "AZ" , "🇦🇿" ] , ["BA", "🇧🇦"], [ "BB" , "🇧🇧" ] , [ "BD" , "🇧🇩" ] , [ "BE" , "🇧🇪" ] , [ "BF" , "🇧🇫" ] , [ "BG" , "🇧🇬" ] , [ "BH" , "🇧🇭" ] , [ "BI" , "🇧🇮" ] , [ "BJ" , "🇧🇯" ] , [ "BM" , "🇧🇲" ] , [ "BN" , "🇧🇳" ] , [ "BO" , "🇧🇴" ] , [ "BR" , "🇧🇷" ] , [ "BS" , "🇧🇸" ] , [ "BT" , "🇧🇹" ] , [ "BV" , "🇧🇻" ] , [ "BW" , "🇧🇼" ] , [ "BY" , "🇧🇾" ] , [ "BZ" , "🇧🇿" ] , [ "CA" , "🇨🇦" ] , [ "CF" , "🇨🇫" ] , [ "CH" , "🇨🇭" ] , [ "CK" , "🇨🇰" ] , [ "CL" , "🇨🇱" ] , [ "CM" , "🇨🇲" ] , [ "CN" , "🇨🇳" ] , [ "CO" , "🇨🇴" ] , [ "CP" , "🇨🇵" ] , [ "CR" , "🇨🇷" ] , [ "CU" , "🇨🇺" ] , [ "CV" , "🇨🇻" ] , [ "CW" , "🇨🇼" ] , [ "CX" , "🇨🇽" ] , [ "CY" , "🇨🇾" ] , [ "CZ" , "🇨🇿" ] , [ "DE" , "🇩🇪" ] , [ "DG" , "🇩🇬" ] , [ "DJ" , "🇩🇯" ] , [ "DK" , "🇩🇰" ] , [ "DM" , "🇩🇲" ] , [ "DO" , "🇩🇴" ] , [ "DZ" , "🇩🇿" ] , [ "EA" , "🇪🇦" ] , [ "EC" , "🇪🇨" ] , [ "EE" , "🇪🇪" ] , [ "EG" , "🇪🇬" ] , [ "EH" , "🇪🇭" ] , [ "ER" , "🇪🇷" ] , [ "ES" , "🇪🇸" ] , [ "ET" , "🇪🇹" ] , [ "EU" , "🇪🇺" ] , [ "FI" , "🇫🇮" ] , [ "FJ" , "🇫🇯" ] , [ "FK" , "🇫🇰" ] , [ "FM" , "🇫🇲" ] , [ "FO" , "🇫�" ] , [ "FR" , "🇫🇷" ] , [ "GA" , "🇬🇦" ] , [ "GB" , "🇬🇧" ] , [ "HK" , "🇭🇰" ] ,["HU","🇭🇺"], [ "ID" , "🇮🇩" ] , [ "IE" , "🇮🇪" ] , [ "IL" , "🇮🇱" ] , [ "IM" , "🇮🇲" ] , [ "IN" , "🇮🇳" ] , [ "IS" , "🇮🇸" ] , [ "IT" , "🇮🇹" ] , [ "JP" , "🇯🇵" ] , [ "KR" , "🇰🇷" ] , [ "LU" , "🇱🇺" ] , [ "MO" , "🇲🇴" ] , [ "MX" , "🇲🇽" ] , [ "MY" , "🇲🇾" ] , [ "NL" , "🇳🇱" ] , [ "PH" , "🇵🇭" ] , [ "RO" , "🇷🇴" ] , [ "RS" , "🇷🇸" ] , [ "RU" , "🇷🇺" ] , [ "RW" , "🇷🇼" ] , [ "SA" , "🇸🇦" ] , [ "SB" , "��🇧" ] , [ "SC" , "🇸🇨" ] , [ "SD" , "🇸🇩" ] , [ "SE" , "🇸🇪" ] , [ "SG" , "🇸🇬" ] , [ "TH" , "🇹🇭" ] , [ "TN" , "🇹🇳" ] , [ "TO" , "🇹🇴" ] , [ "TR" , "🇹🇷" ] , [ "TV" , "🇹🇻" ] , [ "TW" , "🇨🇳" ] , [ "UK" , "🇬🇧" ] , [ "UM" , "🇺🇲" ] , [ "US" , "🇺🇸" ] , [ "UY" , "🇺🇾" ] , [ "UZ" , "🇺🇿" ] , [ "VA" , "🇻🇦" ] , [ "VE" , "🇻🇪" ] , [ "VG" , "🇻🇬" ] , [ "VI" , "🇻🇮" ] , [ "VN" , "🇻🇳" ] , [ "ZA" , "🇿🇦"]])
+
+let result = {
+    "title": '  节点解锁查询',
+    "YouTube": '<b>YouTube: </b>检测失败，请重试� ❗️',
+    "Netflix": '<b>Netflix: </b>检测失败，请重试 ❗️',
+    "Dazn": "<b>Dazn: </b>检测失败，请重试 ❗️",
+    "Disney": "<b>Disneyᐩ: </b>检测失败，请重试 ❗️",
+    "Paramount" : "<b>Paramountᐩ: </b>检测失败，请重试 ❗️",
+    "Discovery" : "<b>Discoveryᐩ: </b>检测失败，请重试 ❗️",
 }
 
-async function Spotify_Price() {
-  var lang = spotify_country ? spotify_country.toLowerCase() : await getLanguage();
+let arrow = " ➟ "
 
-  var options = {
-    url: `https://www.spotify.com/${lang}/premium/`,
-    headers: {
-      Cookie: `sp_t=10f2c6c4-dcd4-4ca8-9b60-bd1718e60d4b; sp_landing=https%3A%2F%2Fwww.spotify.com%2Fnl%2Fpremium%2F; sp_m=nl; sp_new=1; sp_t=8edfd15b-23d8-4b5f-b6ec-27da0f69f674`,
-      "Accept-Encoding": `gzip, deflate, br`,
-      Accept: `*/*`,
-      Referer: `https://www.spotify.com/nl/premium/`,
-      Connection: `keep-alive`,
-      Host: `www.spotify.com`,
-      "User-Agent": `Mozilla/5.0 (iPhone; CPU iPhone OS 16_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Mobile/15E148 Safari/604.1`,
-      "Accept-Language": `zh-CN,zh-Hans;q=0.9`,
-    },
-    node: $environment.params.node,
-    timeout: 10000,
-  };
-  $.log(options.url);
-  return $.http.get(options).then((resp) => {
-    let body = resp.body;
-    let matchResult;
-    const regex = /"primaryPriceDescription"\s*:\s*"([^"]+)"/g;
+Promise.all([ytbTest(),disneyLocation(),nfTest(),daznTest(),parmTest(),discoveryTest(),gptTest()]).then(value => {
+    let content = "------------------------------------</br>"+([result["Dazn"],result["Discovery"],result["Paramount"],result["Disney"],result["Netflix"],result["ChatGPT"],result["YouTube"]]).join("</br></br>")
+    content = content + "</br>------------------------------------</br>"+"<font color=#CD5C5C>"+"<b>节点</b> ➟ " + nodeName+ "</font>"
+    content =`<p style="text-align: center; font-family: -apple-system; font-size: large; font-weight: thin">` + content + `</p>`
+    console.log(content);
+    $done({"title":result["title"],"htmlMessage":content})
+}).catch (values => {
+    console.log("reject:" + values);
+    let content = "------------------------------------</br>"+([result["Dazn"],result["Discovery"],result["Paramount"],result["Disney"],result["Netflix"],result["ChatGPT"],result["YouTube"]]).join("</br></br>")
+    content = content + "</br>------------------------------------</br>"+"<font color=#CD5C5C>"+"<b>节点</b> ➟ " + nodeName+ "</font>"
+    content =`<p style="text-align: center; font-family: -apple-system; font-size: large; font-weight: thin">` + content + `</p>`
+    $done({"title":result["title"],"htmlMessage":content})
+})
 
-    while ((matchResult = regex.exec(body)) !== null) {
-      const price = matchResult[1];
-      if (!price.includes("Free")) {
-        lastPrice = price.trim().replace(/\s*\/\s*/, "/");
-      }
-    }
-
-    if (lastPrice !== null) {
-      console.log(`Last Primary Price:${lastPrice}`);
-    } else {
-      lastPrice = "N/A";
-      console.log("No family plan");
-    }
-
-    $.log(lastPrice);
-  });
+function disneyLocation() {
+    return new Promise((resolve, reject) => {
+        let params = {
+            url: DISNEY_LOCATION_BASE_URL,
+            node: nodeName,
+            timeout: 5000, //ms
+            headers: {
+                'Accept-Language': 'en',
+                "Authorization": 'ZGlzbmV5JmJyb3dzZXImMS4wLjA.Cu56AgSfBTDag5NiRA81oLHkDZfu5L3CKadnefEAY84',
+                'Content-Type': 'application/json',
+                'User-Agent': 'UA'
+            },
+            body: JSON.stringify({
+                query: 'mutation registerDevice($input: RegisterDeviceInput!) { registerDevice(registerDevice: $input) { grant { grantType assertion } } }',
+                variables: {
+                  input: {
+                    applicationRuntime: 'chrome',
+                    attributes: {
+                        browserName: 'chrome',
+                        browserVersion: '94.0.4606',
+                        manufacturer: 'microsoft',
+                        model: null,
+                        operatingSystem: 'windows',
+                        operatingSystemVersion: '10.0',
+                        osDeviceIds: [],
+                    },
+                    deviceFamily: 'browser',
+                    deviceLanguage: 'en',
+                    deviceProfile: 'windows',
+                  },
+                },
+            }),
+        }
+        $httpClient.post(params, (errormsg,response,data) => {
+            console.log("----------disney--------------");
+            if (errormsg) {
+                resolve("disney request failed:" + errormsg);
+                return;
+            }
+            if (response.status == 200) {
+                console.log("disney request result:" + response.status);
+                let resData = JSON.parse(data);
+                if (resData?.extensions?.sdk?.session != null) {
+                    let {
+                        inSupportedLocation,
+                        location: { countryCode },
+                    } = resData?.extensions?.sdk?.session
+                    if (inSupportedLocation == false) {
+                        result["Disney"] = "<b>Disneyᐩ:</b> 即将登陆 ➟ "+'⟦'+flags.get(countryCode.toUpperCase())+"⟧ ⚠️"
+                        resolve();
+                    } else {
+                        result["Disney"] = "<b>Disneyᐩ:</b> 支持 ➟ "+'⟦'+flags.get(countryCode.toUpperCase())+"⟧ 🎉"
+                        resolve({ inSupportedLocation, countryCode });
+                    }
+                } else {
+                    result["Disney"] = "<b>Disneyᐩ:</b> 未支持 🚫 ";
+                    resolve();
+                }
+            } else {
+                result["Discovery"] = "<b>Disneyᐩ:</b>检测失败 ❗️";
+                resolve();
+            }
+        })
+    })
 }
 
-async function getCountry() {
-  var options = {
-    url: `https://ipinfo.io/json?token=${$.token}`,
-    headers: {
-      "User-Agent": `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36`,
-      "Content-Type": "application/json",
-      Accept:
-        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-      "Accept-Encoding": "gzip, deflate, br",
-    },
-   node: $environment.params.node,
-  };
-
-  return $.http.get(options).then((resp) => {
-    $.log(resp.body);
-    var obj = JSON.parse(resp.body);
-    if (!obj.ip) {
-      $.log("🔴ip查询失败!");
-      $.log(resp.body);
-      $.msg($.name, "🔴ip查询失败!");
-      $.done();
-    }
-    return obj.country.toLowerCase();
-  });
+function disneyHomePage() {
+    return new Promise((resolve, reject) => {
+        let params = {
+            url: DISNEY_BASE_URL,
+            node: nodeName,
+            timeout: 5000, //ms
+            headers: {
+                'Accept-Language': 'en',
+                'User-Agent': UA,
+            }
+        }
+        $httpClient.get(params, (errormsg,response,data) => {
+            if (errormsg) {
+                resolve(errormsg);
+                return;
+            }
+            if (response.status != 200 || data.indexOf('unavailable') != -1) {
+                resolve();
+            } else {
+                let match = data.match(/Region: ([A-Za-z]{2})[\s\S]*?CNBL: ([12])/)
+                if (!match) {
+                    resolve();
+                } else {
+                    let region = match[1];
+                    let cnbl = match[2];
+                    //console.log("homepage"+region+cnbl)
+                    resolve({region, cnbl});
+                }
+            }
+        })
+    })
 }
 
-async function getLanguage() {
-  var country = await getCountry();
-
-  var options = {
-    url: `https://www.spotify.com/${country}/premium/`,
-    headers: {
-      Cookie: `sp_t=10f2c6c4-dcd4-4ca8-9b60-bd1718e60d4b; sp_landing=https%3A%2F%2Fwww.spotify.com%2Fnl%2Fpremium%2F; sp_m=nl; sp_new=1; sp_t=8edfd15b-23d8-4b5f-b6ec-27da0f69f674`,
-      "Accept-Encoding": `gzip, deflate, br`,
-      Accept: `*/*`,
-      Referer: `https://www.spotify.com/nl/premium/`,
-      Connection: `keep-alive`,
-      Host: `www.spotify.com`,
-      "User-Agent": `Mozilla/5.0 (iPhone; CPU iPhone OS 16_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Mobile/15E148 Safari/604.1`,
-      "Accept-Language": `zh-CN,zh-Hans;q=0.9`,
-    },
-    node: $environment.params.node,
-    timeout: 10000,
-  };
-  $.log(options.url);
-  return $.http.get(options).then((resp) => {
-    let body = resp.body;
-
-    const regex =
-      /updatePreferredLocaleUrl\"\:\"https:\/\/www\.spotify\.com\/(.*)\/update-preferred-locale\//;
-
-    let ret = regex.exec(body);
-    if (ret != null && ret.length === 2) {
-      region = ret[1];
-    } else {
-      region = `${country}`;
-    }
-    $.log(region);
-    return region;
-  });
+function ytbTest() {
+    return new Promise((resolve, reject) => {
+        let params = {
+            url: YTB_BASE_URL,
+            node: nodeName,
+            timeout: 10000, //ms
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36',
+            }
+        }
+        $httpClient.get(params, (errormsg,response,data) => {
+            console.log("----------YTB--------------");
+            if (errormsg) {
+                console.log("YTB request failed:" + errormsg);
+                resolve(errormsg);
+                return;
+            }
+            if (response.status == 200) {
+                console.log("YTB request data:" + response.status);
+                if (data.indexOf('Premium is not available in your country') !== -1) {
+                    result["YouTube"] = "<b>YouTube Premium: </b>未支持 🚫"
+                    resolve("YTB test failed");
+                } else {
+                    let region = ''
+                    let re = new RegExp('"GL":"(.*?)"', 'gm')
+                    let ret = re.exec(data)
+                    if (ret != null && ret.length === 2) {
+                        region = ret[1]
+                    } else if (data.indexOf('www.google.cn') !== -1) {
+                        region = 'CN'
+                    } else {
+                        region = 'US'
+                    }
+                    result["YouTube"] = "<b>YouTube Premium: </b>支持 "+arrow+ "⟦"+flags.get(region.toUpperCase())+"⟧ 🎉"
+                    resolve(region);
+                }
+            } else {
+                result["YouTube"] = "<b>YouTube Premium: </b>检测失败 ❗️";
+                resolve(response.status);
+            }
+        })
+    })
 }
 
-function getCountryFlagEmoji(countryCode) {
-  if (countryCode.toUpperCase() == "TW") {
-    countryCode = "WS";
-  }
-  const codePoints = countryCode
-    .toUpperCase()
-    .split("")
-    .map((char) => 127397 + char.charCodeAt());
-  return String.fromCodePoint(...codePoints);
+function daznTest() {
+    return new Promise((resolve, reject) => {
+        const extra =`{
+            "LandingPageKey":"generic",
+            "Platform":"web",
+            "PlatformAttributes":{},
+            "Manufacturer":"",
+            "PromoCode":"",
+            "Version":"2"
+          }`;
+        let params = {
+            url: Dazn_BASE_URL,
+            node: nodeName,
+            timeout: 5000, //ms
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36',
+                "Content-Type": "application/json"
+            },
+            body: extra
+        };
+        $httpClient.post(params, (errormsg,response,data) => {
+            console.log("----------DAZN--------------");
+            if (errormsg) {
+                console.log("Dazn request error:" + errormsg);
+                resolve(errormsg);
+                return;
+            }
+            if (response.status == 200) {
+                console.log("Dazn request data:" + response.status);
+                let region = ''
+                let re = new RegExp('"GeolocatedCountry":"(.*?)"', 'gm');
+                let ret = re.exec(data)
+                if (ret != null && ret.length === 2) {
+                    region = ret[1];
+                    result["Dazn"] = "<b>Dazn: </b>支持 "+arrow+ "⟦"+flags.get(region.toUpperCase())+"⟧ 🎉";
+                } else {
+                    result["Dazn"] = "<b>Dazn: </b>未支持 🚫";
+                }
+                resolve(region);
+            } else {
+                result["Dazn"] = "<b>Dazn: </b>检测失败 ❗️";
+                resolve(response.status);
+            }
+        })
+    }) 
+    
 }
 
-// prettier-ignore
-function Env(t,e){class s{constructor(t){this.env=t}send(t,e="GET"){t="string"==typeof t?{url:t}:t;let s=this.get;return"POST"===e&&(s=this.post),new Promise((e,a)=>{s.call(this,t,(t,s,r)=>{t?a(t):e(s)})})}get(t){return this.send.call(this.env,t)}post(t){return this.send.call(this.env,t,"POST")}}return new class{constructor(t,e){this.name=t,this.http=new s(this),this.data=null,this.dataFile="box.dat",this.logs=[],this.isMute=!1,this.isNeedRewrite=!1,this.logSeparator="\n",this.encoding="utf-8",this.startTime=(new Date).getTime(),Object.assign(this,e),this.log("",`🔔${this.name}, 开始!`)}getEnv(){return"undefined"!=typeof $environment&&$environment["surge-version"]?"Surge":"undefined"!=typeof $environment&&$environment["stash-version"]?"Stash":"undefined"!=typeof module&&module.exports?"Node.js":"undefined"!=typeof $task?"Quantumult X":"undefined"!=typeof $loon?"Loon":"undefined"!=typeof $rocket?"Shadowrocket":void 0}isNode(){return"Node.js"===this.getEnv()}isQuanX(){return"Quantumult X"===this.getEnv()}isSurge(){return"Surge"===this.getEnv()}isLoon(){return"Loon"===this.getEnv()}isShadowrocket(){return"Shadowrocket"===this.getEnv()}isStash(){return"Stash"===this.getEnv()}toObj(t,e=null){try{return JSON.parse(t)}catch{return e}}toStr(t,e=null){try{return JSON.stringify(t)}catch{return e}}getjson(t,e){let s=e;const a=this.getdata(t);if(a)try{s=JSON.parse(this.getdata(t))}catch{}return s}setjson(t,e){try{return this.setdata(JSON.stringify(t),e)}catch{return!1}}getScript(t){return new Promise(e=>{this.get({url:t},(t,s,a)=>e(a))})}runScript(t,e){return new Promise(s=>{let a=this.getdata("@chavy_boxjs_userCfgs.httpapi");a=a?a.replace(/\n/g,"").trim():a;let r=this.getdata("@chavy_boxjs_userCfgs.httpapi_timeout");r=r?1*r:20,r=e&&e.timeout?e.timeout:r;const[i,o]=a.split("@"),n={url:`http://${o}/v1/scripting/evaluate`,body:{script_text:t,mock_type:"cron",timeout:r},headers:{"X-Key":i,Accept:"*/*"},timeout:r};this.post(n,(t,e,a)=>s(a))}).catch(t=>this.logErr(t))}loaddata(){if(!this.isNode())return{};{this.fs=this.fs?this.fs:require("fs"),this.path=this.path?this.path:require("path");const t=this.path.resolve(this.dataFile),e=this.path.resolve(process.cwd(),this.dataFile),s=this.fs.existsSync(t),a=!s&&this.fs.existsSync(e);if(!s&&!a)return{};{const a=s?t:e;try{return JSON.parse(this.fs.readFileSync(a))}catch(t){return{}}}}}writedata(){if(this.isNode()){this.fs=this.fs?this.fs:require("fs"),this.path=this.path?this.path:require("path");const t=this.path.resolve(this.dataFile),e=this.path.resolve(process.cwd(),this.dataFile),s=this.fs.existsSync(t),a=!s&&this.fs.existsSync(e),r=JSON.stringify(this.data);s?this.fs.writeFileSync(t,r):a?this.fs.writeFileSync(e,r):this.fs.writeFileSync(t,r)}}lodash_get(t,e,s){const a=e.replace(/\[(\d+)\]/g,".$1").split(".");let r=t;for(const t of a)if(r=Object(r)[t],void 0===r)return s;return r}lodash_set(t,e,s){return Object(t)!==t?t:(Array.isArray(e)||(e=e.toString().match(/[^.[\]]+/g)||[]),e.slice(0,-1).reduce((t,s,a)=>Object(t[s])===t[s]?t[s]:t[s]=Math.abs(e[a+1])>>0==+e[a+1]?[]:{},t)[e[e.length-1]]=s,t)}getdata(t){let e=this.getval(t);if(/^@/.test(t)){const[,s,a]=/^@(.*?)\.(.*?)$/.exec(t),r=s?this.getval(s):"";if(r)try{const t=JSON.parse(r);e=t?this.lodash_get(t,a,""):e}catch(t){e=""}}return e}setdata(t,e){let s=!1;if(/^@/.test(e)){const[,a,r]=/^@(.*?)\.(.*?)$/.exec(e),i=this.getval(a),o=a?"null"===i?null:i||"{}":"{}";try{const e=JSON.parse(o);this.lodash_set(e,r,t),s=this.setval(JSON.stringify(e),a)}catch(e){const i={};this.lodash_set(i,r,t),s=this.setval(JSON.stringify(i),a)}}else s=this.setval(t,e);return s}getval(t){switch(this.getEnv()){case"Surge":case"Loon":case"Stash":case"Shadowrocket":return $persistentStore.read(t);case"Quantumult X":return $prefs.valueForKey(t);case"Node.js":return this.data=this.loaddata(),this.data[t];default:return this.data&&this.data[t]||null}}setval(t,e){switch(this.getEnv()){case"Surge":case"Loon":case"Stash":case"Shadowrocket":return $persistentStore.write(t,e);case"Quantumult X":return $prefs.setValueForKey(t,e);case"Node.js":return this.data=this.loaddata(),this.data[e]=t,this.writedata(),!0;default:return this.data&&this.data[e]||null}}initGotEnv(t){this.got=this.got?this.got:require("got"),this.cktough=this.cktough?this.cktough:require("tough-cookie"),this.ckjar=this.ckjar?this.ckjar:new this.cktough.CookieJar,t&&(t.headers=t.headers?t.headers:{},void 0===t.headers.Cookie&&void 0===t.cookieJar&&(t.cookieJar=this.ckjar))}get(t,e=(()=>{})){switch(t.headers&&(delete t.headers["Content-Type"],delete t.headers["Content-Length"],delete t.headers["content-type"],delete t.headers["content-length"]),t.params&&(t.url+="?"+this.queryStr(t.params)),this.getEnv()){case"Surge":case"Loon":case"Stash":case"Shadowrocket":default:this.isSurge()&&this.isNeedRewrite&&(t.headers=t.headers||{},Object.assign(t.headers,{"X-Surge-Skip-Scripting":!1})),$httpClient.get(t,(t,s,a)=>{!t&&s&&(s.body=a,s.statusCode=s.status?s.status:s.statusCode,s.status=s.statusCode),e(t,s,a)});break;case"Quantumult X":this.isNeedRewrite&&(t.opts=t.opts||{},Object.assign(t.opts,{hints:!1})),$task.fetch(t).then(t=>{const{statusCode:s,statusCode:a,headers:r,body:i,bodyBytes:o}=t;e(null,{status:s,statusCode:a,headers:r,body:i,bodyBytes:o},i,o)},t=>e(t&&t.error||"UndefinedError"));break;case"Node.js":let s=require("iconv-lite");this.initGotEnv(t),this.got(t).on("redirect",(t,e)=>{try{if(t.headers["set-cookie"]){const s=t.headers["set-cookie"].map(this.cktough.Cookie.parse).toString();s&&this.ckjar.setCookieSync(s,null),e.cookieJar=this.ckjar}}catch(t){this.logErr(t)}}).then(t=>{const{statusCode:a,statusCode:r,headers:i,rawBody:o}=t,n=s.decode(o,this.encoding);e(null,{status:a,statusCode:r,headers:i,rawBody:o,body:n},n)},t=>{const{message:a,response:r}=t;e(a,r,r&&s.decode(r.rawBody,this.encoding))})}}post(t,e=(()=>{})){const s=t.method?t.method.tocountryaleLowerCase():"post";switch(t.body&&t.headers&&!t.headers["Content-Type"]&&!t.headers["content-type"]&&(t.headers["content-type"]="application/x-www-form-urlencoded"),t.headers&&(delete t.headers["Content-Length"],delete t.headers["content-length"]),this.getEnv()){case"Surge":case"Loon":case"Stash":case"Shadowrocket":default:this.isSurge()&&this.isNeedRewrite&&(t.headers=t.headers||{},Object.assign(t.headers,{"X-Surge-Skip-Scripting":!1})),$httpClient[s](t,(t,s,a)=>{!t&&s&&(s.body=a,s.statusCode=s.status?s.status:s.statusCode,s.status=s.statusCode),e(t,s,a)});break;case"Quantumult X":t.method=s,this.isNeedRewrite&&(t.opts=t.opts||{},Object.assign(t.opts,{hints:!1})),$task.fetch(t).then(t=>{const{statusCode:s,statusCode:a,headers:r,body:i,bodyBytes:o}=t;e(null,{status:s,statusCode:a,headers:r,body:i,bodyBytes:o},i,o)},t=>e(t&&t.error||"UndefinedError"));break;case"Node.js":let a=require("iconv-lite");this.initGotEnv(t);const{url:r,...i}=t;this.got[s](r,i).then(t=>{const{statusCode:s,statusCode:r,headers:i,rawBody:o}=t,n=a.decode(o,this.encoding);e(null,{status:s,statusCode:r,headers:i,rawBody:o,body:n},n)},t=>{const{message:s,response:r}=t;e(s,r,r&&a.decode(r.rawBody,this.encoding))})}}time(t,e=null){const s=e?new Date(e):new Date;let a={"M+":s.getMonth()+1,"d+":s.getDate(),"H+":s.getHours(),"m+":s.getMinutes(),"s+":s.getSeconds(),"q+":Math.floor((s.getMonth()+3)/3),S:s.getMilliseconds()};/(y+)/.test(t)&&(t=t.replace(RegExp.$1,(s.getFullYear()+"").substr(4-RegExp.$1.length)));for(let e in a)new RegExp("("+e+")").test(t)&&(t=t.replace(RegExp.$1,1==RegExp.$1.length?a[e]:("00"+a[e]).substr((""+a[e]).length)));return t}queryStr(t){let e="";for(const s in t){let a=t[s];null!=a&&""!==a&&("object"==typeof a&&(a=JSON.stringify(a)),e+=`${s}=${a}&`)}return e=e.substring(0,e.length-1),e}msg(e=t,s="",a="",r){const i=t=>{switch(typeof t){case void 0:return t;case"string":switch(this.getEnv()){case"Surge":case"Stash":default:return{url:t};case"Loon":case"Shadowrocket":return t;case"Quantumult X":return{"open-url":t};case"Node.js":return}case"object":switch(this.getEnv()){case"Surge":case"Stash":case"Shadowrocket":default:{let e=t.url||t.openUrl||t["open-url"];return{url:e}}case"Loon":{let e=t.openUrl||t.url||t["open-url"],s=t.mediaUrl||t["media-url"];return{openUrl:e,mediaUrl:s}}case"Quantumult X":{let e=t["open-url"]||t.url||t.openUrl,s=t["media-url"]||t.mediaUrl,a=t["update-pasteboard"]||t.updatePasteboard;return{"open-url":e,"media-url":s,"update-pasteboard":a}}case"Node.js":return}default:return}};if(!this.isMute)switch(this.getEnv()){case"Surge":case"Loon":case"Stash":case"Shadowrocket":default:$notification.post(e,s,a,i(r));break;case"Quantumult X":$notify(e,s,a,i(r));break;case"Node.js":}if(!this.isMuteLog){let t=["","==============📣系统通知📣=============="];t.push(e),s&&t.push(s),a&&t.push(a),console.log(t.join("\n")),this.logs=this.logs.concat(t)}}log(...t){t.length>0&&(this.logs=[...this.logs,...t]),console.log(t.join(this.logSeparator))}logErr(t,e){switch(this.getEnv()){case"Surge":case"Loon":case"Stash":case"Shadowrocket":case"Quantumult X":default:this.log("",`❗️${this.name}, 错误!`,t);break;case"Node.js":this.log("",`❗️${this.name}, 错误!`,t.stack)}}wait(t){return new Promise(e=>setTimeout(e,t))}done(t={}){const e=(new Date).getTime(),s=(e-this.startTime)/1e3;switch(this.log("",`🔔${this.name}, 结束! 🕛 ${s} 秒`),this.log(),this.getEnv()){case"Surge":case"Loon":case"Stash":case"Shadowrocket":case"Quantumult X":default:$done(t);break;case"Node.js":process.exit(1)}}}(t,e)}
+function parmTest() {
+    return new Promise((resolve, reject) => {
+        let params = {
+            url: Param_BASE_URL,
+            node: nodeName,
+            timeout: 5000, //ms
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36',
+            }
+        }
+        $httpClient.get(params, (errormsg,response,data) => {
+            console.log("----------PARAM--------------");
+            if (errormsg) {
+                console.log("Param request error:" + errormsg);
+                resolve(errormsg);
+                return;
+            }
+            console.log("param result:" + response.status);
+            if (response.status == 200) {
+                result["Paramount"] = "<b>Paramountᐩ: </b>支持 🎉 ";
+                resolve();
+            } else if (response.status == 302) {
+                result["Paramount"] = "<b>Paramountᐩ: </b>未支持 🚫";
+                resolve();
+            } else {
+                result["Paramount"] = "<b>Paramountᐩ: </b>检测失败 ❗️";
+                resolve();
+            }
+        })
+    })
+}
+
+function discoveryTest() {
+    return new Promise((resolve, reject) => {
+        let params = {
+            url: Discovery_token_BASE_URL,
+            node: nodeName,
+            timeout: 5000, //ms
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36',
+            }
+        }
+        $httpClient.get(params, (errormsg,response,data) => {
+            if (errormsg) {
+                console.log("Discovery token request error:" + errormsg);
+                resolve(errormsg);
+                return;
+            }
+            if (response.status == 200) {
+                console.log("----------Discory token--------------");
+                console.log("discovery_token request result:" + data);
+                let d = JSON.parse(data);
+                let token = d["data"]["attributes"]["token"];
+                const cookievalid =`_gcl_au=1.1.858579665.1632206782; _rdt_uuid=1632206782474.6a9ad4f2-8ef7-4a49-9d60-e071bce45e88; _scid=d154b864-8b7e-4f46-90e0-8b56cff67d05; _pin_unauth=dWlkPU1qWTRNR1ZoTlRBdE1tSXdNaTAwTW1Nd0xUbGxORFV0WWpZMU0yVXdPV1l6WldFeQ; _sctr=1|1632153600000; aam_fw=aam%3D9354365%3Baam%3D9040990; aam_uuid=24382050115125439381416006538140778858; st=${token}; gi_ls=0; _uetvid=a25161a01aa711ec92d47775379d5e4d; AMCV_BC501253513148ED0A490D45%40AdobeOrg=-1124106680%7CMCIDTS%7C18894%7CMCMID%7C24223296309793747161435877577673078228%7CMCAAMLH-1633011393%7C9%7CMCAAMB-1633011393%7CRKhpRz8krg2tLO6pguXWp5olkAcUniQYPHaMWWgdJ3xzPWQmdj0y%7CMCOPTOUT-1632413793s%7CNONE%7CvVersion%7C5.2.0; ass=19ef15da-95d6-4b1d-8fa2-e9e099c9cc38.1632408400.1632406594`;
+
+                let p = {
+                    url: Discovery_BASE_URL,
+                    node: nodeName,
+                    timeout: 5000,
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36',
+                        "Cookie": cookievalid,
+                    }
+                }
+                $httpClient.get(p, (emsg, res, resData) => {
+                    console.log("----------Discory--------------");
+                    if (emsg) {
+                        console.log("Discovery request error:" + errormsg);
+                        resolve(emsg);
+                        return;
+                    }
+                    if (res.status == 200) {
+                        console.log("Discovery request result:" + resData);
+                        let resD = JSON.parse(resData);
+                        let locationd = resD["data"]["attributes"]["currentLocationTerritory"];
+                        if (locationd == 'us') {
+                            result["Discovery"] = "<b>Discoveryᐩ: </b>支持 🎉 ";
+                            resolve();
+                        } else {
+                            result["Discovery"] = "<b>Discoveryᐩ: </b>未支持 🚫";
+                            resolve();
+                        }
+                    } else {
+                        result["Discovery"] = "<b>Discoveryᐩ: </b>检测失败 ❗️";
+                        resolve(res.status);
+                    }
+                })
+
+            } else {
+                result["Discovery"] = "<b>Discoveryᐩ: </b>检测失败 ❗️";
+                resolve(response.status);
+            }
+        })
+    })
+}
+
+function nfTest() {
+    return new Promise((resolve, reject) => {
+        let params = {
+            url: NF_BASE_URL,
+            node: nodeName,
+            timeout: 5000, //ms
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36',
+            }
+        }
+        $httpClient.get(params, (errormsg,response,data) => {
+            console.log("----------NetFlix--------------");
+            if (errormsg) {
+                console.log("NF request failed:" + errormsg);
+                resolve(errormsg);
+                return;
+            }
+            if (response.status == 403) {
+                result["Netflix"] = "<b>Netflix: </b>未支持 🚫"
+                resolve("403 Not Available");
+            } else if (response.status == 404) {
+                result["Netflix"] = "<b>Netflix: </b>支持自制剧集 ⚠️"
+                resolve("404 Not Found");
+            } else if (response.status == 200) {
+                console.log("NF request result:" + JSON.stringify(response.headers));
+                let ourl = response.headers['X-Originating-URL']
+                if (ourl == undefined) {
+                    ourl = response.headers['X-Originating-Url']
+                }
+                console.log("X-Originating-URL:" + ourl)
+                let region = ourl.split('/')[3]
+                region = region.split('-')[0];
+                if (region == 'title') {
+                    region = 'us'
+                }
+                result["Netflix"] = "<b>Netflix: </b>完整支持"+arrow+ "⟦"+flags.get(region.toUpperCase())+"⟧ 🎉"
+                resolve(region);
+            } else {
+                result["Netflix"] = "<b>Netflix: </b>检测失败 ❗️";
+                resolve(response.status)
+            }
+        })
+    })
+}
+
+//chatgpt
+support_countryCodes=["T1","XX","AL","DZ","AD","AO","AG","AR","AM","AU","AT","AZ","BS","BD","BB","BE","BZ","BJ","BT","BA","BW","BR","BG","BF","CV","CA","CL","CO","KM","CR","HR","CY","DK","DJ","DM","DO","EC","SV","EE","FJ","FI","FR","GA","GM","GE","DE","GH","GR","GD","GT","GN","GW","GY","HT","HN","HU","IS","IN","ID","IQ","IE","IL","IT","JM","JP","JO","KZ","KE","KI","KW","KG","LV","LB","LS","LR","LI","LT","LU","MG","MW","MY","MV","ML","MT","MH","MR","MU","MX","MC","MN","ME","MA","MZ","MM","NA","NR","NP","NL","NZ","NI","NE","NG","MK","NO","OM","PK","PW","PA","PG","PE","PH","PL","PT","QA","RO","RW","KN","LC","VC","WS","SM","ST","SN","RS","SC","SL","SG","SK","SI","SB","ZA","ES","LK","SR","SE","CH","TH","TG","TO","TT","TN","TR","TV","UG","AE","US","UY","VU","ZM","BO","BN","CG","CZ","VA","FM","MD","PS","KR","TW","TZ","TL","GB"]
+
+function gptTest() {
+    return new Promise((resolve, reject) => {
+        let params = {
+            url: GPT_BASE_URL,
+            node: nodeName,
+            timeout: 5000, //ms
+        }
+        $httpClient.get(params, (errormsg,response,data) => {
+            console.log("----------GPT--------------");
+            if (errormsg) {
+                console.log("GPT request failed:" + errormsg);
+                resolve(errormsg);
+                return;
+            }
+
+            let resp = JSON.stringify(data)
+            console.log("ChatGPT Main Test")
+            let jdg = resp.indexOf("text/plain")
+            if (jdg == -1) {
+                let p = {
+                    url: GPT_RegionL_URL,
+                    node: nodeName,
+                    timeout: 5000, //ms
+                }
+                $httpClient.get(p, (emsg, resheader, resData) => {
+                    console.log("----------GPT RegionL--------------");
+                    if (emsg) {
+                        console.log("GPT RegionL request error:" + errormsg);
+                        resolve(emsg);
+                        return;
+                    }
+
+                    console.log("ChatGPT Region Test")
+                    let region = resData.split("loc=")[1].split("\n")[0]
+                    console.log("ChatGPT Region: "+region)
+                    let res = support_countryCodes.indexOf(region)
+                    if (res != -1) {
+                        result["ChatGPT"] = "<b>ChatGPT: </b>支持 "+arrow+ "⟦"+flags.get(region.toUpperCase())+"⟧ 🎉"
+                        console.log("支持 ChatGPT")
+                        resolve(region)
+                    } else {
+                        result["ChatGPT"] = "<b>ChatGPT: </b>未支持 🚫"
+                        console.log("不支持 ChatGPT")
+                        resolve("不支持 ChatGPT")
+                    }
+                })
+            } else {
+                result["ChatGPT"] = "<b>ChatGPT: </b>未支持 🚫"
+                console.log("不支持 ChatGPT")
+                resolve("不支持 ChatGPT")
+            }
+        })
+    })
+}
