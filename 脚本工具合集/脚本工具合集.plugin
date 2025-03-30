@@ -12,9 +12,6 @@
 #!select = 是否隐藏真实IP, 隐藏, 不隐藏
 #!date = 2025-03-30 00:00
 
-# 2023-09-19 20:07:19
-# https://raw.githubusercontent.com/Keywos/rule/main/script/netisp/netisp.plugin
-
 
 [Rule]
 DOMAIN-SUFFIX, speedtest.cn, DIRECT
