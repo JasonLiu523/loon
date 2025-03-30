@@ -1,5 +1,5 @@
 #!name = 脚本工具合集
-#!desc = 节点解锁状况、节点网速测试、节点位置查询、节点入口落地详细信息,国内外IP, 运营商, ASN, ORG, 位置, 策略; IPv6; 入口落地; 隐私; LAN; SSID. 自己设置对应域名的分流. 支持网络变化时进行查询通知. 支持长按节点进行查询. 提供 https://net-lsp-x.com 数据接口, 参数与模块参数相同. 详细参数设置见频道说明: https://t.me/zhetengsha
+#!desc = 节点解锁状况、节点网速测试、节点位置查询、节点入口落地详细信息
 #!openUrl = 
 #!author = Jason[https://github.com/JasonLiu523]
 #!system = 
@@ -12,13 +12,6 @@
 #!select = 是否隐藏真实IP, 隐藏, 不隐藏
 #!date = 2025-03-30 00:00
 
-
-[Rule]
-DOMAIN-SUFFIX, speedtest.cn, DIRECT
-DOMAIN-SUFFIX, ip.im, DIRECT
-DOMAIN-SUFFIX, ip.plus, DIRECT
-
-
 [Script]
 generic script-path = https://raw.githubusercontent.com/JasonLiu523/loon/refs/heads/main/%E8%84%9A%E6%9C%AC%E5%B7%A5%E5%85%B7%E5%90%88%E9%9B%86/%E7%BD%91%E7%BB%9C%E5%BB%B6%E8%BF%9F.js, timeout = 10, tag = 网络延迟
 
@@ -28,18 +21,10 @@ generic script-path = https://raw.githubusercontent.com/JasonLiu523/loon/refs/he
 
 generic script-path = https://raw.githubusercontent.com/JasonLiu523/loon/refs/heads/main/%E8%84%9A%E6%9C%AC%E5%B7%A5%E5%85%B7%E5%90%88%E9%9B%86/%E5%85%A5%E5%8F%A3%E8%90%BD%E5%9C%B0%E6%9F%A5%E8%AF%A2.js, tag = 入口落地查询
 
-http-request ^https?:\/\/net-lsp-x\.com script-path = https://raw.githubusercontent.com/JasonLiu523/loon/refs/heads/main/%E8%84%9A%E6%9C%AC%E5%B7%A5%E5%85%B7%E5%90%88%E9%9B%86/%E7%BD%91%E7%BB%9C%E4%BF%A1%E6%81%AF%E8%AF%B7%E6%B1%82.js, timeout = 120, tag = 网络信息请求
-
-network-changed script-path = https://raw.githubusercontent.com/JasonLiu523/loon/refs/heads/main/%E8%84%9A%E6%9C%AC%E5%B7%A5%E5%85%B7%E5%90%88%E9%9B%86/%E7%BD%91%E7%BB%9C%E4%BF%A1%E6%81%AF%E5%8F%98%E5%8C%96.js, timeout = 120, tag = 网络信息变化, argument = "TYPE=EVENT&icon=globe.asia.australia&icon-color=#6699FF&LAN=0&SSID=0&IPv6==0&MASK=0&DOMSTIC_IPv4=spcn&DOESTIC_IPv6=ddnspod&LANDING_IPv4=ipapi&LANDING_IPv6=ipsb&PRIVACY=0&FLAG=1&ENYRANCE_DELAY&EVENT_DELAY=3"
-
-generic script-path = https://raw.githubusercontent.com/JasonLiu523/loon/refs/heads/main/%E8%84%9A%E6%9C%AC%E5%B7%A5%E5%85%B7%E5%90%88%E9%9B%86/%E7%BD%91%E7%BB%9C%E4%BF%A1%E6%81%AF%E6%9F%A5%E8%AF%A2.js, timeout = 120, tag = 网络信息查询
-
 generic script-path=https://raw.githubusercontent.com/JasonLiu523/loon/refs/heads/main/%E8%84%9A%E6%9C%AC%E5%B7%A5%E5%85%B7%E5%90%88%E9%9B%86/%E5%9C%B0%E7%90%86%E4%BD%8D%E7%BD%AE%E6%9F%A5%E8%AF%A2.js, timeout=10, tag=地理位置查询
 
 generic script-path=https://raw.githubusercontent.com/JasonLiu523/loon/refs/heads/main/%E8%84%9A%E6%9C%AC%E5%B7%A5%E5%85%B7%E5%90%88%E9%9B%86/%E8%8A%82%E7%82%B9%E8%A7%A3%E9%94%81%E6%9F%A5%E8%AF%A2.js, timeout=20, tag=节点解锁查询
 
 generic script-path=https://raw.githubusercontent.com/JasonLiu523/loon/refs/heads/main/%E8%84%9A%E6%9C%AC%E5%B7%A5%E5%85%B7%E5%90%88%E9%9B%86/Spotify%E8%A7%A3%E9%94%81%E6%9F%A5%E8%AF%A2.js, timeout=10, tag=Spotify解锁查询
 
-
-[MitM]
-hostname = net-lsp-x.com
+generic script-path=https://raw.githubusercontent.com/JasonLiu523/loon/refs/heads/main/%E8%84%9A%E6%9C%AC%E5%B7%A5%E5%85%B7%E5%90%88%E9%9B%86/%E4%BB%A3%E7%90%86%E9%93%BE%E8%B7%AF%E6%A3%80%E6%B5%8B.js, tag=代理链路检测
