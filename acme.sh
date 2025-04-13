@@ -1,3 +1,4 @@
+#自动申请SSL证书#
 #!/bin/bash
 
 # 颜色定义
@@ -9,8 +10,6 @@ NC='\033[0m' # No Color
 
 printf "${GREEN}====================自动申请SSL证书=========================${NC}\n"
 printf "${BLUE} 本脚本支持：Debian9+ / Ubuntu16.04+ / Centos7+${NC}\n"
-printf "${BLUE} 原创：www.v2rayssr.com （已开启禁止国内访问）${NC}\n"
-printf "${BLUE} YouTube频道：波仔分享${NC}\n"
 printf "${BLUE} 本脚本禁止在国内任何网站转载${NC}\n"
 printf "${GREEN}==========================================================${NC}\n"
 
